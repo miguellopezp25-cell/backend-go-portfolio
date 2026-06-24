@@ -181,6 +181,28 @@ set -e                    # Detiene si algún comando falla
 exec ./app serve         # Reemplaza el shell por el proceso del server
 ```
 
+## CORS
+
+El servidor incluye un middleware CORS que lee la lista de orígenes permitidos desde la configuración.
+
+| Variable de entorno       | config.yaml           | Descripción                           |
+|---------------------------|-----------------------|---------------------------------------|
+| `SERVER_ALLOWED_ORIGINS`  | `server.allowed_origins` | Orígenes permitidos separados por coma |
+
+Por defecto se permite `*` (todos los orígenes). Para restringirlo en producción (Railway):
+
+```
+SERVER_ALLOWED_ORIGINS=https://mlopezdev.up.railway.app
+```
+
+Múltiples orígenes:
+
+```
+SERVER_ALLOWED_ORIGINS=https://mlopezdev.up.railway.app,http://localhost:5173
+```
+
+Si la solicitud incluye `Origin`, el middleware refleja ese valor exacto en `Access-Control-Allow-Origin` y añade `Vary: Origin`. También habilita `Access-Control-Allow-Credentials: true` para peticiones autenticadas.
+
 ## Comandos disponibles
 
 | Comando                   | Descripción                    |
