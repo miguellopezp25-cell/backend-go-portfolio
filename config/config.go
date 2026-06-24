@@ -4,6 +4,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -57,7 +58,10 @@ func Load(path string) (*Config, error) {
 	v.AutomaticEnv()
 
 	if err := v.ReadInConfig(); err != nil {
-		// Ignora si el archivo no existe (Railway no tiene config.yaml)
+		var cfgNotFound viper.ConfigFileNotFoundError
+		if !errors.As(err, &cfgNotFound) {
+			return nil, fmt.Errorf("failed to read config: %w", err)
+		}
 	}
 
 	var cfg Config
