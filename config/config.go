@@ -5,6 +5,9 @@ package config
 
 import (
 	"fmt"
+	"net/url"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -30,6 +33,9 @@ type DatabaseConfig struct {
 
 // DSN retorna la cadena de conexión para pgxpool.
 func (d DatabaseConfig) DSN() string {
+	if url := os.Getenv("DATABASE_URL"); url != "" {
+		return url
+	}
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		d.User, d.Password, d.Host, d.Port, d.DBName, d.SSLMode,
@@ -38,14 +44,12 @@ func (d DatabaseConfig) DSN() string {
 
 // URL retorna la misma cadena para golang-migrate (espera el mismo formato).
 func (d DatabaseConfig) URL() string {
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		d.User, d.Password, d.Host, d.Port, d.DBName, d.SSLMode,
-	)
+	return d.DSN()
 }
 
 // Load lee el archivo YAML en la ruta dada y lo mapea a Config.
-// Viper soporta sobreescritura por vars de entorno: DATABASE_HOST, etc.
+// Si DATABASE_URL está definida (Railway, Render, etc.), parsea la URL
+// y sobreescribe los valores individuales de base de datos.
 func Load(path string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigFile(path)
@@ -53,12 +57,49 @@ func Load(path string) (*Config, error) {
 	v.AutomaticEnv()
 
 	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config: %w", err)
+		// Ignora si el archivo no existe (Railway no tiene config.yaml)
 	}
 
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	if dbURL := os.Getenv("DATABASE_URL"); dbURL != "" {
+		parsed, err := url.Parse(dbURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse DATABASE_URL: %w", err)
+		}
+
+		portStr := parsed.Port()
+		port := 5432
+		if portStr != "" {
+			port, err = strconv.Atoi(portStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid port in DATABASE_URL: %w", err)
+			}
+		}
+
+		sslMode := parsed.Query().Get("sslmode")
+		if sslMode == "" {
+			sslMode = "require"
+		}
+
+		dbName := strings.TrimLeft(parsed.Path, "/")
+
+		cfg.Database = DatabaseConfig{
+			Host:    parsed.Hostname(),
+			Port:    port,
+			DBName:  dbName,
+			SSLMode: sslMode,
+		}
+
+		if parsed.User != nil {
+			cfg.Database.User = parsed.User.Username()
+			if pw, ok := parsed.User.Password(); ok {
+				cfg.Database.Password = pw
+			}
+		}
 	}
 
 	return &cfg, nil
