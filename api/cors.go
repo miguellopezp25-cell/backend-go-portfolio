@@ -1,38 +1,25 @@
 package api
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 )
 
-func CORSMiddleware(allowedOrigins string) gin.HandlerFunc {
-	origins := strings.FieldsFunc(allowedOrigins, func(r rune) bool { return r == ',' || r == ' ' })
-
+func CORSMiddleware(allowedOrigin string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 1. Detectamos el origen de la petición
 		origin := c.Request.Header.Get("Origin")
 
-		if origin != "" {
-			allowed := false
-			for _, o := range origins {
-				if o == "*" || o == origin {
-					allowed = true
-					break
-				}
-			}
-			if allowed {
-				c.Header("Access-Control-Allow-Origin", origin)
-				c.Header("Vary", "Origin")
-			}
-		} else {
-			c.Header("Access-Control-Allow-Origin", "*")
+		// 2. Si viene de localhost o de tu dominio de producción, lo permitimos
+		if origin == "http://localhost:3000" || origin == allowedOrigin {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Header("Access-Control-Max-Age", "86400")
+		// 3. Configuramos el resto de los headers necesarios
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
+		// 4. ¡CRUCIAL! Si es un Preflight (OPTIONS), respondemos 204 y cortamos el flujo
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
