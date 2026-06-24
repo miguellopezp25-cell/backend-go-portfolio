@@ -28,7 +28,8 @@ func (m *mockStore) GetVisitor(ctx context.Context, id pgtype.UUID) (db.VisitorV
 
 func TestCreateVisitor_Success(t *testing.T) {
 	var id pgtype.UUID
-	id.Scan("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+	err := id.Scan("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+	require.NoError(t, err)
 
 	mock := &mockStore{
 		createVisitorFn: func(ctx context.Context, data []byte) (db.VisitorVisitor, error) {
@@ -66,7 +67,8 @@ func TestGetVisitor_NotFound(t *testing.T) {
 
 func TestGetVisitor_Success(t *testing.T) {
 	var id pgtype.UUID
-	id.Scan("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+	err := id.Scan("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+	require.NoError(t, err)
 
 	mock := &mockStore{
 		getVisitorFn: func(ctx context.Context, uid pgtype.UUID) (db.VisitorVisitor, error) {
