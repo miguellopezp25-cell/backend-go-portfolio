@@ -36,3 +36,29 @@ func (q *Queries) GetVisitor(ctx context.Context, id pgtype.UUID) (VisitorVisito
 	err := row.Scan(&i.ID, &i.Data, &i.CreatedAt)
 	return i, err
 }
+
+const listVisitors = `-- name: ListVisitors :many
+SELECT id, data, created_at
+FROM visitor.visitors
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListVisitors(ctx context.Context) ([]VisitorVisitor, error) {
+	rows, err := q.db.Query(ctx, listVisitors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []VisitorVisitor
+	for rows.Next() {
+		var i VisitorVisitor
+		if err := rows.Scan(&i.ID, &i.Data, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

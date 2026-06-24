@@ -11,9 +11,12 @@ func SetupRouter(srv *Server) *gin.Engine {
 
 	v1 := r.Group("/api/v1")
 	{
+		v1.GET("/visitors", srv.List)
 		v1.POST("/visitors", srv.Create)
 		v1.GET("/visitors/:id", srv.GetByID)
 	}
+
+
 
 	return r
 }

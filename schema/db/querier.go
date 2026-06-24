@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	CreateVisitor(ctx context.Context, data []byte) (VisitorVisitor, error)
 	GetVisitor(ctx context.Context, id pgtype.UUID) (VisitorVisitor, error)
+	ListVisitors(ctx context.Context) ([]VisitorVisitor, error)
 }
 
 var _ Querier = (*Queries)(nil)
