@@ -6,6 +6,7 @@ import (
 
 func SetupRouter(srv *Server) *gin.Engine {
 	r := gin.Default()
+	r.Use(CORSMiddleware())
 
 	r.GET("/healthz", HealthCheck)
 
