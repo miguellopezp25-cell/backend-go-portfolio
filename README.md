@@ -109,6 +109,78 @@ schema/db/ (Store)     ← embed Querier, executa queries SQL
 PostgreSQL             ← datos en JSONB
 ```
 
+## Docker
+
+### docker-compose.yml
+
+```yaml
+services:
+  app:                          # Servicio de la app Go
+    build:
+      context: .                # Usa el Dockerfile del proyecto
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"             # Expone puerto 8080 al host
+    depends_on:
+      db:
+        condition: service_healthy  # Espera a que PostgreSQL esté listo
+    environment:
+      - CONFIG_PATH=/app/config.yaml   # Ruta del config dentro del contenedor
+      - DATABASE_HOST=db               # Apunta a la BD por nombre del servicio
+
+  db:                           # Servicio PostgreSQL
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"             # Expone PostgreSQL al host (para DBeaver)
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: visitors
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # Persiste datos aunque mate el contenedor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:                       # Volumen nombrado para persistencia
+```
+
+### Dockerfile
+
+```dockerfile
+# === ETAPA 1: compilación ===
+FROM golang:1.24-alpine AS builder
+WORKDIR /app                      # Directorio de trabajo
+COPY go.mod go.sum ./             # Solo mod/sum primero (cachea dependencias)
+RUN go mod download               # Descarga dependencias
+COPY . .                          # Copia todo el código
+RUN CGO_ENABLED=0 go build -o bin/app ./main.go  # Compila binario estático
+
+# === ETAPA 2: imagen final mínima ===
+FROM alpine:3.21
+RUN apk add --no-cache ca-certificates   # Certificados TLS
+WORKDIR /app
+COPY --from=builder /app/bin/app .              # Solo el binario
+COPY --from=builder /app/config.yaml .          # Config
+COPY --from=builder /app/schema/migrations ./schema/migrations  # Migraciones SQL
+COPY --from=builder /app/entrypoint.sh .        # Script de inicio
+RUN chmod +x entrypoint.sh
+EXPOSE 8080                        # Puerto que usa la app
+CMD ["./entrypoint.sh"]            # Entrypoint: corre migrate luego serve
+```
+
+### entrypoint.sh
+
+```sh
+#!/bin/sh
+set -e                    # Detiene si algún comando falla
+./app migrate            # Crea tablas automáticamente
+exec ./app serve         # Reemplaza el shell por el proceso del server
+```
+
 ## Comandos disponibles
 
 | Comando                   | Descripción                    |
