@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     depends_on:
@@ -10,6 +10,7 @@ services:
         condition: service_healthy
     environment:
       - CONFIG_PATH=/app/config.yaml
+      - DATABASE_HOST=db
 
   db:
     image: postgres:16-alpine

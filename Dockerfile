@@ -10,5 +10,8 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /app/bin/app .
 COPY --from=builder /app/config.yaml .
+COPY --from=builder /app/schema/migrations ./schema/migrations
+COPY --from=builder /app/entrypoint.sh .
+RUN chmod +x entrypoint.sh
 EXPOSE 8080
-CMD ["./app", "serve"]
+CMD ["./entrypoint.sh"]

@@ -19,11 +19,11 @@ import (
 )
 
 type Server struct {
-	cfg    *config.Config
-	pool   *pgxpool.Pool
-	store  db.Store
-	svc    *visitorservice.Service
-	http   *http.Server
+	cfg            *config.Config
+	pool           *pgxpool.Pool
+	store          db.Store
+	visitorService *visitorservice.Service
+	http           *http.Server
 }
 
 func NewServer(cfgPath string) (*Server, error) {
@@ -42,18 +42,20 @@ func NewServer(cfgPath string) (*Server, error) {
 
 	store := db.NewStore(pool)
 	svc := visitorservice.NewService(store)
-	router := SetupRouter(svc)
 
-	return &Server{
-		cfg:   cfg,
-		pool:  pool,
-		store: store,
-		svc:   svc,
-		http: &http.Server{
-			Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
-			Handler: router,
-		},
-	}, nil
+	s := &Server{
+		cfg:            cfg,
+		pool:           pool,
+		store:          store,
+		visitorService: svc,
+	}
+
+	s.http = &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
+		Handler: SetupRouter(s),
+	}
+
+	return s, nil
 }
 
 func (s *Server) Start() error {

@@ -5,6 +5,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -48,6 +49,7 @@ func (d DatabaseConfig) URL() string {
 func Load(path string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigFile(path)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
 	if err := v.ReadInConfig(); err != nil {
