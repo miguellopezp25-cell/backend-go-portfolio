@@ -11,6 +11,7 @@ services:
     environment:
       - CONFIG_PATH=/app/config.yaml
       - DATABASE_HOST=db
+    env_file: .env
 
   db:
     image: postgres:16-alpine
