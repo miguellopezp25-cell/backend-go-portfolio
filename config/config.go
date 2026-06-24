@@ -20,7 +20,8 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port int `mapstructure:"port"`
+	Port           int    `mapstructure:"port"`
+	AllowedOrigins string `mapstructure:"allowed_origins"`
 }
 
 type DatabaseConfig struct {

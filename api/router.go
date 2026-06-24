@@ -6,7 +6,7 @@ import (
 
 func SetupRouter(srv *Server) *gin.Engine {
 	r := gin.Default()
-	r.Use(CORSMiddleware())
+	r.Use(CORSMiddleware(srv.cfg.Server.AllowedOrigins))
 
 	r.GET("/healthz", HealthCheck)
 
