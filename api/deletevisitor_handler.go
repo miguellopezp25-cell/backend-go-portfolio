@@ -11,16 +11,16 @@ import (
 	"github.com/miguel/go-back-portfolo/pkg/response"
 )
 
-// @Summary Get a visitor by ID
-// @Description Retrieve a visitor's details by their UUID
+// @Summary Delete a visitor
+// @Description Delete a visitor by their UUID
 // @Tags visitors
 // @Produce json
 // @Param id path string true "Visitor UUID"
-// @Success 200 {object} response.APIResponse
+// @Success 204 "No Content"
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
-// @Router /visitors/{id} [get]
-func (s *Server) GetByID(c *gin.Context) {
+// @Router /visitors/{id} [delete]
+func (s *Server) Delete(c *gin.Context) {
 	id := c.Param("id")
 
 	var uid pgtype.UUID
@@ -29,15 +29,14 @@ func (s *Server) GetByID(c *gin.Context) {
 		return
 	}
 
-	visitor, err := s.visitorService.GetByID(c.Request.Context(), id)
-	if err != nil {
+	if err := s.visitorService.Delete(c.Request.Context(), id); err != nil {
 		if stderrors.Is(err, apperrors.ErrNotFound) {
 			response.Error(c, http.StatusNotFound, "visitor not found", nil)
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, "failed to get visitor", err.Error())
+		response.Error(c, http.StatusInternalServerError, "failed to delete visitor", err.Error())
 		return
 	}
 
-	response.OK(c, visitor)
+	c.JSON(http.StatusNoContent, nil)
 }

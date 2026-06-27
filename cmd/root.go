@@ -26,5 +26,5 @@ func Execute() {
 
 func init() {
 	// Flag global --config para todos los subcomandos
-	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "config.yaml", "path to configuration file")
+	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "config/config.yaml", "path to configuration file")
 }

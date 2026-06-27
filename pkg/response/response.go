@@ -32,6 +32,32 @@ func Created(c *gin.Context, data interface{}) {
 	})
 }
 
+// PaginatedResponse extiende APIResponse con metadatos de paginación.
+type PaginatedResponse struct {
+	Success    bool        `json:"success"`
+	Data       interface{} `json:"data"`
+	Total      int64       `json:"total"`
+	Page       int         `json:"page"`
+	PageSize   int         `json:"page_size"`
+	TotalPages int         `json:"total_pages"`
+}
+
+func Paginated(c *gin.Context, data interface{}, total int64, page, pageSize int) {
+	totalPages := int(total / int64(pageSize))
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	c.JSON(http.StatusOK, PaginatedResponse{
+		Success:    true,
+		Data:       data,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	})
+}
+
 func Error(c *gin.Context, status int, message string, detail interface{}) {
 	resp := APIResponse{
 		Success: false,

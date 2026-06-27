@@ -12,23 +12,32 @@ import (
 
 	apperrors "github.com/miguel/go-back-portfolo/pkg/errors"
 	"github.com/miguel/go-back-portfolo/schema"
+	"github.com/miguel/go-back-portfolo/schema/db"
 )
 
-func (s *Service) GetByID(ctx context.Context, id string) (*schema.Visitor, error) {
+func (s *Service) Update(ctx context.Context, id string, req VisitorRequest) (*schema.Visitor, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	var uid pgtype.UUID
 	if err := uid.Scan(id); err != nil {
-		return nil, fmt.Errorf("failed to parse uuid: %w", err)
+		return nil, fmt.Errorf("invalid uuid: %w", err)
 	}
 
-	v, err := 	s.store.GetVisitor(ctx, uid)
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal visitor data: %w", err)
+	}
+
+	v, err := s.store.UpdateVisitor(ctx, db.UpdateVisitorParams{
+		ID:   uid,
+		Data: data,
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apperrors.ErrNotFound
 		}
-		return nil, fmt.Errorf("failed to get visitor: %w", err)
+		return nil, fmt.Errorf("failed to update visitor: %w", err)
 	}
 
 	var visitor schema.Visitor
@@ -36,5 +45,6 @@ func (s *Service) GetByID(ctx context.Context, id string) (*schema.Visitor, erro
 		return nil, fmt.Errorf("failed to unmarshal visitor data: %w", err)
 	}
 	visitor.ID = v.ID.String()
+
 	return &visitor, nil
 }

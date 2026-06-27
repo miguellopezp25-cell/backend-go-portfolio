@@ -125,7 +125,7 @@ services:
       db:
         condition: service_healthy  # Espera a que PostgreSQL esté listo
     environment:
-      - CONFIG_PATH=/app/config.yaml   # Ruta del config dentro del contenedor
+      - CONFIG_PATH=/app/config/config.yaml   # Ruta del config dentro del contenedor
       - DATABASE_HOST=db               # Apunta a la BD por nombre del servicio
 
   db:                           # Servicio PostgreSQL
@@ -164,7 +164,7 @@ FROM alpine:3.21
 RUN apk add --no-cache ca-certificates   # Certificados TLS
 WORKDIR /app
 COPY --from=builder /app/bin/app .              # Solo el binario
-COPY --from=builder /app/config.yaml .          # Config
+COPY --from=builder /app/config/config.yaml ./config/   # Config
 COPY --from=builder /app/schema/migrations ./schema/migrations  # Migraciones SQL
 COPY --from=builder /app/entrypoint.sh .        # Script de inicio
 RUN chmod +x entrypoint.sh

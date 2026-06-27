@@ -1,0 +1,210 @@
+basePath: /api/v1
+definitions:
+  api.createRequest:
+    properties:
+      city:
+        example: CDMX
+        maxLength: 100
+        minLength: 1
+        type: string
+      country:
+        example: Mexico
+        maxLength: 100
+        minLength: 1
+        type: string
+      email:
+        example: miguel@example.com
+        type: string
+      name:
+        example: Miguel
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - city
+    - country
+    - email
+    - name
+    type: object
+  response.APIResponse:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  response.PaginatedResponse:
+    properties:
+      data: {}
+      page:
+        type: integer
+      page_size:
+        type: integer
+      success:
+        type: boolean
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API for managing visitor registrations with PostgreSQL and JSONB
+    storage.
+  title: Visitor Management API
+  version: 1.0.0
+paths:
+  /healthz:
+    get:
+      description: Returns service health status including database connectivity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Health check
+      tags:
+      - system
+  /visitors:
+    get:
+      description: Retrieve a paginated list of visitors
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PaginatedResponse'
+      summary: List all visitors
+      tags:
+      - visitors
+    post:
+      consumes:
+      - application/json
+      description: Create a new visitor record
+      parameters:
+      - description: Visitor data
+        in: body
+        name: visitor
+        required: true
+        schema:
+          $ref: '#/definitions/api.createRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Create a visitor
+      tags:
+      - visitors
+  /visitors/{id}:
+    delete:
+      description: Delete a visitor by their UUID
+      parameters:
+      - description: Visitor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Delete a visitor
+      tags:
+      - visitors
+    get:
+      description: Retrieve a visitor's details by their UUID
+      parameters:
+      - description: Visitor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get a visitor by ID
+      tags:
+      - visitors
+    put:
+      consumes:
+      - application/json
+      description: Update an existing visitor's data
+      parameters:
+      - description: Visitor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated visitor data
+        in: body
+        name: visitor
+        required: true
+        schema:
+          $ref: '#/definitions/api.createRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Update a visitor
+      tags:
+      - visitors
+swagger: "2.0"

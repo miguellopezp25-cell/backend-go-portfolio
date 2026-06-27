@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countVisitors = `-- name: CountVisitors :one
+SELECT COUNT(*) FROM visitor.visitors
+`
+
+func (q *Queries) CountVisitors(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countVisitors)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createVisitor = `-- name: CreateVisitor :one
 INSERT INTO visitor.visitors ("data")
 VALUES ($1)
@@ -22,6 +33,19 @@ func (q *Queries) CreateVisitor(ctx context.Context, data []byte) (VisitorVisito
 	var i VisitorVisitor
 	err := row.Scan(&i.ID, &i.Data, &i.CreatedAt)
 	return i, err
+}
+
+const deleteVisitor = `-- name: DeleteVisitor :one
+DELETE FROM visitor.visitors
+WHERE id = $1
+RETURNING id
+`
+
+func (q *Queries) DeleteVisitor(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, deleteVisitor, id)
+	var id_2 pgtype.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
 }
 
 const getVisitor = `-- name: GetVisitor :one
@@ -41,10 +65,16 @@ const listVisitors = `-- name: ListVisitors :many
 SELECT id, data, created_at
 FROM visitor.visitors
 ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListVisitors(ctx context.Context) ([]VisitorVisitor, error) {
-	rows, err := q.db.Query(ctx, listVisitors)
+type ListVisitorsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListVisitors(ctx context.Context, arg ListVisitorsParams) ([]VisitorVisitor, error) {
+	rows, err := q.db.Query(ctx, listVisitors, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -61,4 +91,23 @@ func (q *Queries) ListVisitors(ctx context.Context) ([]VisitorVisitor, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateVisitor = `-- name: UpdateVisitor :one
+UPDATE visitor.visitors
+SET data = $1
+WHERE id = $2
+RETURNING id, data, created_at
+`
+
+type UpdateVisitorParams struct {
+	Data []byte      `json:"data"`
+	ID   pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateVisitor(ctx context.Context, arg UpdateVisitorParams) (VisitorVisitor, error) {
+	row := q.db.QueryRow(ctx, updateVisitor, arg.Data, arg.ID)
+	var i VisitorVisitor
+	err := row.Scan(&i.ID, &i.Data, &i.CreatedAt)
+	return i, err
 }

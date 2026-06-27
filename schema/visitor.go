@@ -5,9 +5,10 @@ package schema
 
 // Visitor es el modelo completo de dominio para un visitante.
 type Visitor struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Country string `json:"country"`
-	City    string `json:"city"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Country   string `json:"country"`
+	City      string `json:"city"`
+	CreatedAt string `json:"created_at,omitempty"`
 }

@@ -9,7 +9,7 @@ FROM alpine:3.21
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /app/bin/app .
-COPY --from=builder /app/config.yaml .
+COPY --from=builder /app/config/config.yaml ./config/
 COPY --from=builder /app/schema/migrations ./schema/migrations
 COPY --from=builder /app/entrypoint.sh .
 RUN chmod +x entrypoint.sh

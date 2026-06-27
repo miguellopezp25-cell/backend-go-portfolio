@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -14,10 +15,12 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		srv, err := api.NewServer(cfgPath)
 		if err != nil {
-			log.Fatalf("Failed to create server: %v", err)
+			slog.Error("failed to create server", "error", err)
+			os.Exit(1)
 		}
 		if err := srv.Start(); err != nil {
-			log.Fatalf("Server error: %v", err)
+			slog.Error("server error", "error", err)
+			os.Exit(1)
 		}
 	},
 }

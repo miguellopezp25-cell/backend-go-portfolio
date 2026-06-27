@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -21,20 +22,23 @@ var migrateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg, err := config.Load(cfgPath)
 		if err != nil {
-			log.Fatalf("Failed to load config: %v", err)
+			slog.Error("failed to load config", "error", err)
+			os.Exit(1)
 		}
 
 		m, err := migrate.New(
 			"file://schema/migrations",
-			cfg.Database.URL(),
+			cfg.Database.DSN(),
 		)
 		if err != nil {
-			log.Fatalf("Failed to create migrator: %v", err)
+			slog.Error("failed to create migrator", "error", err)
+			os.Exit(1)
 		}
 		defer m.Close()
 
 		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-			log.Fatalf("Migration failed: %v", err)
+			slog.Error("migration failed", "error", err)
+			os.Exit(1)
 		}
 
 		fmt.Println("Migrations applied successfully")

@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -60,9 +60,10 @@ func NewServer(cfgPath string) (*Server, error) {
 
 func (s *Server) Start() error {
 	go func() {
-		log.Printf("Server listening on port %d", s.cfg.Server.Port)
+		slog.Info("server listening", "port", s.cfg.Server.Port)
 		if err := s.http.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
+			slog.Error("server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -70,7 +71,7 @@ func (s *Server) Start() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	slog.Info("shutting down server...")
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
@@ -79,6 +80,6 @@ func (s *Server) Start() error {
 	}
 
 	s.pool.Close()
-	log.Println("Server exited gracefully")
+	slog.Info("server exited gracefully")
 	return nil
 }

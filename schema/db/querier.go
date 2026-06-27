@@ -11,9 +11,12 @@ import (
 )
 
 type Querier interface {
+	CountVisitors(ctx context.Context) (int64, error)
 	CreateVisitor(ctx context.Context, data []byte) (VisitorVisitor, error)
+	DeleteVisitor(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	GetVisitor(ctx context.Context, id pgtype.UUID) (VisitorVisitor, error)
-	ListVisitors(ctx context.Context) ([]VisitorVisitor, error)
+	ListVisitors(ctx context.Context, arg ListVisitorsParams) ([]VisitorVisitor, error)
+	UpdateVisitor(ctx context.Context, arg UpdateVisitorParams) (VisitorVisitor, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -44,11 +44,6 @@ func (d DatabaseConfig) DSN() string {
 	)
 }
 
-// URL retorna la misma cadena para golang-migrate (espera el mismo formato).
-func (d DatabaseConfig) URL() string {
-	return d.DSN()
-}
-
 // Load lee el archivo YAML en la ruta dada y lo mapea a Config.
 // Si DATABASE_URL está definida (Railway, Render, etc.), parsea la URL
 // y sobreescribe los valores individuales de base de datos.
